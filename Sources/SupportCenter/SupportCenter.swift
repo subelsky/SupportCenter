@@ -24,12 +24,12 @@ public struct SupportCenter {
 
     /// Present the support controller on your view controller
     /// - Parameter controller: Controller to present the support controller on
-    public static func present(from controller: UIViewController, reportOptions: [ReportOption]? = nil, delegate: SupportCenterViewControllerDelegate? = nil) {
-        let supportController = SupportCenter.controller(from: controller, reportOptions: reportOptions, delegate: delegate)
+    public static func present(from controller: UIViewController, reportOptions: [ReportOption]? = nil, delegate: SupportCenterViewControllerDelegate? = nil, defaultSenderEmail: String) {
+        let supportController = SupportCenter.controller(from: controller, reportOptions: reportOptions, delegate: delegate, defaultSenderEmail: defaultSenderEmail)
         controller.present(supportController, animated: false, completion: nil)
     }
 
-    public static func controller(from controller: UIViewController, reportOptions: [ReportOption]? = nil, delegate: SupportCenterViewControllerDelegate? = nil) -> UIViewController {
+    public static func controller(from controller: UIViewController, reportOptions: [ReportOption]? = nil, delegate: SupportCenterViewControllerDelegate? = nil, defaultSenderEmail: String) -> UIViewController {
         guard sendgrid != nil else {
             assertionFailure("Sendgrid token not set. Please call setSengridToken before presenting this controller.")
             return UIViewController()
@@ -37,7 +37,7 @@ public struct SupportCenter {
 
         sendgrid?.metadata = Metadata(controller: controller)
 
-        let controller = SupportCenterViewController(options: reportOptions ?? DefaultReportOption.allCases)
+        let controller = SupportCenterViewController(options: reportOptions ?? DefaultReportOption.allCases, defaultSenderEmail: defaultSenderEmail)
         controller.delegate = delegate
 
         return controller

@@ -1,6 +1,6 @@
 //
 //  ComposeController.swift
-//  
+//
 //
 //  Created by Aaron Satterfield on 5/8/20.
 //
@@ -12,8 +12,9 @@ import Photos
 
 class ComposeNavigationController: UINavigationController {
 
-    convenience init(option: ReportOption) {
-        self.init(rootViewController: ComposeViewController(option: option))
+    convenience init(option: ReportOption, defaultSenderEmail: String) {
+        let rootViewController = ComposeViewController(option: option, defaultSenderEmail: defaultSenderEmail)
+        self.init(rootViewController: rootViewController)
     }
 
     override init(rootViewController: UIViewController) {
@@ -69,6 +70,8 @@ class ComposeViewController: UIViewController, AttachmentsViewDelegate {
         t.heightAnchor.constraint(equalToConstant: 50.0).isActive = true
         t.addTarget(self, action: #selector(self.emailTextValueDidChange(sender:)), for: .editingChanged)
         t.setContentCompressionResistancePriority(.required, for: .vertical)
+        t.isHidden = true // HACK 2024-07-10: we don't need this since this fork uses the user's email address for the value of email
+
         return t
     }()
 
@@ -89,12 +92,13 @@ class ComposeViewController: UIViewController, AttachmentsViewDelegate {
         return v
     }()
 
-    convenience init(option: ReportOption) {
-        self.init(nibName: nil, bundle: nil, option: option)
+    convenience init(option: ReportOption, defaultSenderEmail: String) {
+        self.init(nibName: nil, bundle: nil, option: option, defaultSenderEmail: defaultSenderEmail)
     }
 
-    init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?, option: ReportOption) {
+    init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?, option: ReportOption, defaultSenderEmail: String) {
         self.option = option
+        self.email = Email(defaultSenderEmail)
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
     }
 
@@ -109,6 +113,7 @@ class ComposeViewController: UIViewController, AttachmentsViewDelegate {
         title = option.title
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(self.actionCancel))
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "paperplane.fill"), style: .done, target: self, action: #selector(actionSend(sender:)))
+
         setupSubviews()
         checkSendButton()
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(self.onTapGesture(sender:))))
@@ -117,12 +122,13 @@ class ComposeViewController: UIViewController, AttachmentsViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        emailTextField.becomeFirstResponder()
+        messageTextView.becomeFirstResponder()
     }
 
     func setupSubviews() {
         view.addSubview(emailTextField)
         let seperator1 = SeperatorLineView()
+        seperator1.backgroundColor = .clear // HACK 2024-07-10: we are hiding the EmailTextField, so don't need to show the seperator
         let seperator2 = SeperatorLineView()
         view.addSubview(seperator1)
         view.addSubview(messageTextView)
@@ -156,7 +162,7 @@ class ComposeViewController: UIViewController, AttachmentsViewDelegate {
             attachmentsView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             attachmentsViewBottom
         ])
-        
+
     }
 
     @objc func actionCancel() {

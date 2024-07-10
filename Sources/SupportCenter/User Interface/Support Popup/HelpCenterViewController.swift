@@ -1,6 +1,6 @@
 //
 //  SupportCenterViewController.swift
-//  
+//
 //
 //  Created by Aaron Satterfield on 5/12/20.
 //
@@ -16,6 +16,7 @@ class SupportCenterViewController: UIViewController, SupportCenterHelpContainerV
     weak var delegate: SupportCenterViewControllerDelegate?
 
     let options: [ReportOption]
+    let defaultSenderEmail: String
 
     lazy var blurView: UIVisualEffectView = {
         let v = UIVisualEffectView()
@@ -51,13 +52,14 @@ class SupportCenterViewController: UIViewController, SupportCenterHelpContainerV
         return [leading, trailing, width]
     }()
 
-    convenience init(options: [ReportOption]) {
-        self.init(nibName: nil, bundle: nil, options: options)
+    convenience init(options: [ReportOption], defaultSenderEmail: String) {
+        self.init(nibName: nil, bundle: nil, options: options, defaultSenderEmail: defaultSenderEmail)
         modalPresentationStyle = .overFullScreen
     }
 
-    init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?, options: [ReportOption]) {
+    init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?, options: [ReportOption], defaultSenderEmail: String) {
         self.options = options
+        self.defaultSenderEmail = defaultSenderEmail
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
     }
 
@@ -133,8 +135,11 @@ class SupportCenterViewController: UIViewController, SupportCenterHelpContainerV
 
     func presentComposeSheet(for option: ReportOption) {
         guard let controller = presentingViewController else { return }
-        hideAnimated {
-            controller.present(ComposeNavigationController(option: option), animated: true, completion: nil)
+        hideAnimated { [weak self] in
+            guard let strongSelf = self else { return }
+
+            let email = strongSelf.defaultSenderEmail
+            controller.present(ComposeNavigationController(option: option, defaultSenderEmail: email), animated: true, completion: nil)
         }
     }
 
